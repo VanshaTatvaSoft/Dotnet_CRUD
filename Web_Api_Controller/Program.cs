@@ -1,6 +1,6 @@
 using Web_Api_Controller.Extension;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -28,7 +28,7 @@ builder.Services.RegisterDbConnection(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -41,12 +41,14 @@ app.UseHttpsRedirection();
 
 app.UseRateLimiter();
 
+app.UseGlobalExceptionMiddleware();
+
 app.MapControllers().RequireRateLimiting("fixed");
 
 //Seeding data for In Memory
-// using(var scope = app.Services.CreateScope())
+// using(IServiceScope scope = app.Services.CreateScope())
 // {
-//     var context = scope.ServiceProvider.GetRequiredService<ProductManagementContext>();
+//     ProductManagementContext context = scope.ServiceProvider.GetRequiredService<ProductManagementContext>();
 //     InMemorySeeder.InMemmoryDbSeeder(context);
 // }
 

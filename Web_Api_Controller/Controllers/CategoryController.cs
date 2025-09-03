@@ -13,36 +13,36 @@ public class CategoryController(ICategoryService categoryService): ControllerBas
 
     #region GetAllCategories
     [HttpGet]
-    public async Task<IActionResult> GetAllCategories()
+    public async Task<IActionResult> GetAllCategories(CancellationToken cancellationToken)
     {
-        ApiResponse<List<CategoryInfoDTO>> response = await _categoryService.GetAllCategoryAsync();
+        ApiResponse<List<CategoryInfoDTO>> response = await _categoryService.GetAllCategoryAsync(cancellationToken);
         return StatusCode((int)response.StatusCode, response);
     }
     #endregion
 
     #region AddCategory
     [HttpPost]
-    public async Task<IActionResult> AddCategory([FromBody] CategoryInfoDTO categoryInfo)
+    public async Task<IActionResult> AddCategory([FromBody] CategoryInfoDTO categoryInfo, CancellationToken cancellationToken)
     {
-        ApiResponse<string> response = await _categoryService.AddCategoryAsync(categoryInfo);
+        ApiResponse<string> response = await _categoryService.AddCategoryAsync(categoryInfo, cancellationToken);
         return StatusCode((int)response.StatusCode, response);
     }
     #endregion
 
     #region EditCategory
     [HttpPut]
-    public async Task<IActionResult> EditCategory([FromBody] CategoryInfoDTO categoryInfo)
+    public async Task<IActionResult> EditCategory([FromBody] CategoryInfoDTO categoryInfo, CancellationToken cancellationToken)
     {
-        ApiResponse<string> response = await _categoryService.EditCategoryAsync(categoryInfo);
+        ApiResponse<string> response = await _categoryService.EditCategoryAsync(categoryInfo, cancellationToken);
         return StatusCode((int)response.StatusCode, response);
     }
     #endregion
 
-    #region EditCategory
-    [HttpPut("soft-delete/{id}")]
-    public async Task<IActionResult> SoftDeleteCategory(int id)
+    #region SoftDeleteCategory
+    [HttpPut("soft-delete/{id:int}")]
+    public async Task<IActionResult> SoftDeleteCategory(int id, CancellationToken cancellationToken)
     {
-        ApiResponse<string> response = await _categoryService.SoftDeleteCategoryAsync(id);
+        ApiResponse<string> response = await _categoryService.SoftDeleteCategoryAsync(id, cancellationToken);
         return StatusCode((int)response.StatusCode, response);
     }
     #endregion

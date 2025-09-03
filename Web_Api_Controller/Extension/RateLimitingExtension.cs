@@ -7,9 +7,9 @@ public static class RateLimitingExtension
 {
     public static IServiceCollection RateLimiting(this IServiceCollection services, IConfiguration configuration)
     {
-        var permitLimit = configuration.GetValue<int>("RateLimiting:PermitLimit");
-        var windowSeconds = configuration.GetValue<int>("RateLimiting:WindowSeconds");
-        var queueLimit = configuration.GetValue<int>("RateLimiting:QueueLimit");
+        Int32 permitLimit = configuration.GetValue<int>("RateLimiting:PermitLimit");
+        Int32 windowSeconds = configuration.GetValue<int>("RateLimiting:WindowSeconds");
+        Int32 queueLimit = configuration.GetValue<int>("RateLimiting:QueueLimit");
 
         services.AddRateLimiter(options => 
         {

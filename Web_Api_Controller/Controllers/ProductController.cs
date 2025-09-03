@@ -13,18 +13,18 @@ public class ProductController(IProviderService providerService): ControllerBase
 
     #region GetAllProducts
     [HttpGet]
-    public async Task<IActionResult> GetAllProducts()
+    public async Task<IActionResult> GetAllProducts(CancellationToken cancellationToken)
     {
-        ApiResponse<List<ProductInfoDTO>> response = await _providerService.GetAllProductAsync();
+        ApiResponse<List<ProductInfoDTO>> response = await _providerService.GetAllProductAsync(cancellationToken);
         return StatusCode((int)response.StatusCode, response);
     }
     #endregion
 
     #region AddProduct
     [HttpPost]
-    public async Task<IActionResult> AddProduct([FromBody] ProductInfoDTO productInfo)
+    public async Task<IActionResult> AddProduct([FromBody] ProductInfoDTO productInfo, CancellationToken cancellationToken)
     {
-        ApiResponse<string> response = await _providerService.AddProductAsync(productInfo);
+        ApiResponse<string> response = await _providerService.AddProductAsync(productInfo, cancellationToken);
         return StatusCode((int)response.StatusCode, response);
     }
     #endregion

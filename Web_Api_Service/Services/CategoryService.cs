@@ -1,4 +1,5 @@
 using System.Net;
+using Web_Api_Repository.DTO;
 using Web_Api_Repository.Models;
 using Web_Api_Repository.UnitOfWork;
 using Web_Api_Service.DTO;
@@ -11,93 +12,101 @@ public class CategoryService(IUnitOfWork unitOfWork): ICategoryService
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     #region GetAllCategoryAsync 
-    public async Task<ApiResponse<List<CategoryInfoDTO>>> GetAllCategoryAsync()
+    public async Task<ApiResponse<List<CategoryInfoDTO>>> GetAllCategoryAsync(CancellationToken cancellationToken)
     {
-        List<Category> categories = await _unitOfWork.Categories.GetAllAsync(
-            c => !c.IsDeleted,
-            null,
-            q => q.OrderBy(c => c.Id)
-        );
-        if(categories == null || categories.Count == 0){
-            return ApiResponse<List<CategoryInfoDTO>>.FailResponse("No Category Found", HttpStatusCode.NotFound);
-        }  
-        List<CategoryInfoDTO> categoryList = categories.Select(c => new CategoryInfoDTO{
-            Id = c.Id,
-            CategoryName = c.CategoryName,
-            CategoryDescription = c.CategoryDesc
-        }).ToList();
-        return ApiResponse<List<CategoryInfoDTO>>.SuccessResponse(categoryList, HttpStatusCode.OK, "Categories retrieved successfully");
+        QueryOptions<Category, CategoryInfoDTO> options = new()
+        {
+            Predicate = c => !c.IsDeleted,
+            OrderBy = c => c.Id,
+            Selector = c => new CategoryInfoDTO
+            {
+                Id = c.Id,
+                CategoryName = c.CategoryName,
+                CategoryDescription = c.CategoryDesc
+            },
+            CancellationToken = cancellationToken
+        };
+        List<CategoryInfoDTO> categoryList = await _unitOfWork.Categories.GetAllAsync(options);
+
+        if(categoryList == null || categoryList.Count == 0){
+            return new ApiResponse<List<CategoryInfoDTO>>(HttpStatusCode.NotFound, "No Category Found", false);
+        }
+        return new ApiResponse<List<CategoryInfoDTO>>(HttpStatusCode.OK, "Categories retrieved successfully", true, categoryList);
     }
     #endregion
 
     #region AddCategoryAsync
-    public async Task<ApiResponse<string>> AddCategoryAsync(CategoryInfoDTO categoryInfo)
+    public async Task<ApiResponse<string>> AddCategoryAsync(CategoryInfoDTO categoryInfo, CancellationToken cancellationToken)
     {
         try
         {
-            List<Category> categories = await _unitOfWork.Categories
-                .GetAllAsync(c => c.CategoryName.ToLower() == categoryInfo.CategoryName.ToLower() && !c.IsDeleted);
+            int count = await _unitOfWork.Categories
+                .CountAllAsync(c => c.CategoryName.ToLower() == categoryInfo.CategoryName.ToLower() && !c.IsDeleted);
 
-            if(categories.Count > 0) return ApiResponse<string>.FailResponse("Category with this name already exist", HttpStatusCode.BadRequest);
+            if(count > 0) 
+                return new ApiResponse<string>(HttpStatusCode.BadRequest, "Category with this name already exist", false);
 
             Category category = new(){
                 CategoryName = categoryInfo.CategoryName,
                 CategoryDesc = categoryInfo.CategoryDescription
             };
-            await _unitOfWork.Categories.AddAsync(category);
+            await _unitOfWork.Categories.AddAsync(category, cancellationToken);
             await _unitOfWork.SaveAsync();
-            return ApiResponse<string>.SuccessResponse("", HttpStatusCode.OK, "Category added successfully");
+            return new ApiResponse<string>(HttpStatusCode.OK, "Category added successfully");
         }
         catch (Exception)
         {
-            return ApiResponse<string>.FailResponse("Error adding category.", HttpStatusCode.BadRequest);
+            return new ApiResponse<string>(HttpStatusCode.BadRequest, "Error adding category.", false);
         }
 
     }
     #endregion
 
     #region EditCategoryAsync
-    public async Task<ApiResponse<string>> EditCategoryAsync(CategoryInfoDTO categoryInfo)
+    public async Task<ApiResponse<string>> EditCategoryAsync(CategoryInfoDTO categoryInfo, CancellationToken cancellationToken)
     {
         try
         {
-            List<Category> categories = await _unitOfWork.Categories
-                .GetAllAsync(c => c.CategoryName.ToLower() == categoryInfo.CategoryName.ToLower() && !c.IsDeleted && c.Id != categoryInfo.Id);
+            int count = await _unitOfWork.Categories
+                .CountAllAsync(c => c.CategoryName.ToLower() == categoryInfo.CategoryName.ToLower() && !c.IsDeleted && c.Id != categoryInfo.Id);
 
-            if(categories.Count > 0) 
-                return ApiResponse<string>.FailResponse("Category with this name already exist", HttpStatusCode.BadRequest);
+            if(count > 0) 
+                return new ApiResponse<string>(HttpStatusCode.BadRequest, "Category with this name already exist", false);
 
-            Category category = await _unitOfWork.Categories.GetByIdAsync(categoryInfo.Id);
+            Category category = await _unitOfWork.Categories.GetByIdAsync(categoryInfo.Id, cancellationToken);
             category.CategoryName = categoryInfo.CategoryName;
             category.CategoryDesc = categoryInfo.CategoryDescription;
             category.ModifiedAt = DateTime.UtcNow;
-            await _unitOfWork.Categories.EditAsync(category);
-            return ApiResponse<string>.SuccessResponse("", HttpStatusCode.OK, "Category updated successfully");
+            await _unitOfWork.Categories.EditAsync(category, cancellationToken);
+            return new ApiResponse<string>(HttpStatusCode.OK, "Category updated successfully");
         }
         catch (Exception)
         {
-            return ApiResponse<string>.FailResponse("Error editing category.", HttpStatusCode.BadRequest);
+            return new ApiResponse<string>(HttpStatusCode.BadRequest, "Error editing category.", false);
         }
     }
     #endregion
 
     #region SoftDeleteCategoryAsync
-    public async Task<ApiResponse<string>> SoftDeleteCategoryAsync(int id)
+    public async Task<ApiResponse<string>> SoftDeleteCategoryAsync(int id, CancellationToken cancellationToken)
     {
         try
         {
-            Category category = await _unitOfWork.Categories.GetByIdAsync(id);
+            Category category = await _unitOfWork.Categories.GetByIdAsync(id, cancellationToken);
+
             if(category == null)
             {
-                return ApiResponse<string>.FailResponse("Category with this id does'nt exist.", HttpStatusCode.NotFound);
+                return new ApiResponse<string>(HttpStatusCode.NotFound, "Category with this id does'nt exist.", false);
             }
-            await _unitOfWork.Categories.SoftDeleteAsync(category);
-            return ApiResponse<string>.SuccessResponse("", HttpStatusCode.OK, "Category deleted successfully");
+            await _unitOfWork.Categories.SoftDeleteAsync(category, cancellationToken);
+            return new ApiResponse<string>(HttpStatusCode.OK, "Category deleted successfully");
         }
         catch (Exception)
         {
-            return ApiResponse<string>.FailResponse("Error deleting category.", HttpStatusCode.BadRequest);
+            return new ApiResponse<string>(HttpStatusCode.BadRequest, "Error deleting category.", false);
         }
     }
     #endregion
+
+
 }

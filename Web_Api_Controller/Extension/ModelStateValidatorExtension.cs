@@ -11,8 +11,8 @@ public static class ModelStateValidatorExtension
         services.Configure<ApiBehaviorOptions>(options => {
             options.InvalidModelStateResponseFactory = context => 
             {
-                var errors = context.ModelState.Values.SelectMany(e => e.Errors).Select(e => e.ErrorMessage).ToList();
-                var errorResponse = ApiResponse<string>.FailResponse(string.Join(", ", errors), HttpStatusCode.BadRequest);
+                List<string> errors = context.ModelState.Values.SelectMany(e => e.Errors).Select(e => e.ErrorMessage).ToList();
+                ApiResponse<string> errorResponse = new(HttpStatusCode.BadRequest, string.Join(", ", errors), false);
                 return new BadRequestObjectResult(errorResponse);
             };
         });
