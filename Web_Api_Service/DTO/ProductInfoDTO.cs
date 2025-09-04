@@ -2,18 +2,19 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Web_Api_Service.DTO;
 
-public class ProductInfoDTO
-{
-    public int Id { get; set; }
+public record ProductInfoDTO
+(
+    int Id,
     [Required(ErrorMessage = "Enter product name")]
     [StringLength(50, ErrorMessage = "Product name should not be greater the 50")]
-    public string ProductName { get; set; }
+    string ProductName,
     [Required(ErrorMessage = "Enter product description")]
     [StringLength(100, ErrorMessage = "Product description should not be greater the 100")]
-    public string ProductDesc { get; set; }
+    string ProductDesc,
     [Required(ErrorMessage = "Enter product price")]
-    public decimal ProductPrice { get; set; }
+    decimal ProductPrice,
     [Required(ErrorMessage = "Enter category id")]
-    public int CategoryId { get; set; }
-    public string CategoryName { get; set; }
-}
+    [Range(1, int.MaxValue, ErrorMessage = "Category Id must be greater than 0")]
+    int CategoryId,
+    string CategoryName
+);

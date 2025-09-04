@@ -1,6 +1,7 @@
-namespace Web_Api_Controller.CustomAttributes;
+using Microsoft.Extensions.DependencyInjection;
 
-[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+namespace Web_Api_Core.CustomAttributes;
+
 public class InjectableServiceAttribute: Attribute
 {
     public ServiceLifetime Lifetime { get; }
